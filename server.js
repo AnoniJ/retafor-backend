@@ -2,21 +2,27 @@ import express from 'express';
 import cors from 'cors';
 
 const app = express();
-const PORT = 5000;
+// ✅ USA EL PUERTO DE RENDER, NO 5000
+const PORT = process.env.PORT || 5000;
 
-// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// ===================
-//  RUTAS DE LA API
-// ===================
+// Ruta raíz
+app.get('/', (req, res) => {
+  res.json({ 
+    success: true,
+    message: '🚀 API RETAFOR funcionando en Render!',
+    port: PORT,
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
 
-// Ruta de prueba
+// Ruta de API
 app.get('/api', (req, res) => {
   res.json({ 
     success: true,
-    message: '🚀 API RETAFOR funcionando con PostgreSQL',
+    message: 'API RETAFOR - Sistema de gestión ambiental',
     endpoints: {
       sincronizacion: 'POST /api/sync/datos',
       catalogos: 'GET /api/sync/catalogos'
@@ -24,40 +30,17 @@ app.get('/api', (req, res) => {
   });
 });
 
-// Sincronizar datos desde la app
-app.post('/api/sync/datos', async (req, res) => {
-  try {
-    const { tala_pendiente, compensacion_pendiente } = req.body;
-    
-    console.log('📤 Sincronizando:', {
-      tala: tala_pendiente?.length || 0,
-      compensacion: compensacion_pendiente?.length || 0
-    });
-
-    // Aquí iría la conexión a PostgreSQL
-    // Por ahora solo confirmamos recepción
-    
-    res.json({
-      success: true,
-      message: 'Datos recibidos en el servidor',
-      registros_recibidos: {
-        tala: tala_pendiente?.length || 0,
-        compensacion: compensacion_pendiente?.length || 0
-      },
-      // En producción, aquí insertaríamos en PostgreSQL
-      nota: 'PostgreSQL conectado - Listo para guardar datos'
-    });
-
-  } catch (error) {
-    console.error('❌ Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error en el servidor: ' + error.message
-    });
-  }
+// Ruta de sincronización
+app.post('/api/sync/datos', (req, res) => {
+  console.log('📤 Datos recibidos:', req.body);
+  res.json({ 
+    success: true, 
+    message: 'Datos recibidos en el servidor',
+    datos_recibidos: req.body
+  });
 });
 
-// Obtener catálogos
+// Ruta de catálogos
 app.get('/api/sync/catalogos', (req, res) => {
   res.json({
     success: true,
@@ -79,9 +62,7 @@ app.get('/api/sync/catalogos', (req, res) => {
   });
 });
 
-// Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`🎯 Servidor RETAFOR ejecutándose en: http://localhost:${PORT}`);
-  console.log(`📡 API disponible en: http://localhost:${PORT}/api`);
-  console.log(`🗄️  PostgreSQL: Conectado (tablas creadas)`);
+// ✅ ESCUCHAR EN 0.0.0.0 (IMPORTANTE PARA RENDER)
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🎯 Servidor RETAFOR ejecutándose en puerto ${PORT}`);
 });
